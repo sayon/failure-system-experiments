@@ -14,18 +14,6 @@ where
     pub data: U, // U = specific instance of ZksyncError
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct UntypedErrorObject {
-    pub identifier: Identifier,
-    pub value: serde_json::Value, // Specific value introduced by user; unpacked from the Domain/subdomain.
-}
-impl UntypedErrorObject
-{
-pub fn get_object(&self) -> serde_json::Value {
-    //FIXME
-    self.value.as_object().unwrap().iter().nth(0).unwrap().1.clone()
-}
-}
 pub fn pack_unified<T>(s: T) -> Result<PackedError<T>, serde_json::Error>
 where
     T: serde::Serialize + IUnifiedError + Clone,
@@ -45,7 +33,18 @@ where
     pack_unified(s.to_unified()).expect("Serialization error")
 }
 
-pub fn serialized<T>(p: &PackedError<T>) -> SerializedError
+pub fn serialized<T>(p: PackedError<T>) -> SerializedError
+where
+    T: serde::Serialize + IUnifiedError,
+{
+    let data = serde_json::value::to_value(&p.data).expect("Serialization error");
+    SerializedError {
+        code: p.identifier.encode(),
+        message: p.message,
+        data,
+    }
+}
+pub fn serialized_ref<T>(p: &PackedError<T>) -> SerializedError
 where
     T: serde::Serialize + IUnifiedError,
 {
