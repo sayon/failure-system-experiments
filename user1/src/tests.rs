@@ -1,7 +1,7 @@
 #![cfg(test)]
 #![allow(dead_code)]
 
-use common::{
+use zksync_error::{
     kind::{EraSubdomain, Kind},
     packed::{pack, serialized, PackedError},
     serialized::{unpack_typed, unpack_untyped, SerializedError},

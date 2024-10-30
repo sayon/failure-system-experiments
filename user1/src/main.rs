@@ -2,7 +2,7 @@ pub mod error;
 pub mod error_definitions;
 mod tests;
 
-use common::error::CustomErrorMessage;
+use zksync_error::error::CustomErrorMessage;
 
 use strum_macros::EnumDiscriminants;
 
@@ -37,7 +37,7 @@ pub enum ZksolcError {
 #[non_exhaustive]
 pub enum SolcError {
     SomeError(String) = 1,
-    OtherSolcError{filename: String, other: String} = 2,
+    OtherSolcError { filename: String, other: String } = 2,
 }
 
 impl CustomErrorMessage for SolcError {

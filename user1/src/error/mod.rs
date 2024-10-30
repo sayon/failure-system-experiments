@@ -4,11 +4,11 @@
 
 pub mod domains;
 
-use common::error::CustomErrorMessage;
+use zksync_error::error::CustomErrorMessage;
 
-use common::error::IError;
+use zksync_error::error::IError;
 
-use common::identifier::Identifier;
+use zksync_error::identifier::Identifier;
 
 use crate::error::domains::CompilerError;
 use crate::error::domains::ToolingError;

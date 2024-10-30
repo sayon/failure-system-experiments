@@ -1,3 +1,3 @@
 [workspace]
-members = ["common", "user1"]
+members = ["zksync_error", "user1"]
 resolver = "2"

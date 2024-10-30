@@ -2,14 +2,14 @@
 //! Immutable for user
 //!
 //!
-use common::error::ICustomError;
+use zksync_error::error::ICustomError;
 
-use common::error::IUnifiedError;
+use zksync_error::error::IUnifiedError;
 
-use common::kind::CompilerSubdomain;
+use zksync_error::kind::CompilerSubdomain;
 
-use common::kind::Kind;
-use common::kind::ToolingSubdomain;
+use zksync_error::kind::Kind;
+use zksync_error::kind::ToolingSubdomain;
 
 use strum_macros::EnumDiscriminants;
 
@@ -28,7 +28,7 @@ pub enum ZksyncError {
 }
 
 impl ZksyncError {
-    pub fn get_kind(&self) -> common::kind::Kind {
+    pub fn get_kind(&self) -> zksync_error::kind::Kind {
         match self {
             ZksyncError::CompilerError(compiler_error) => Kind::Compiler(match compiler_error {
                 CompilerError::Zksolc(_) => CompilerSubdomain::Zksolc,
