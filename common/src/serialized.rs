@@ -1,6 +1,12 @@
 use crate::{
-    error::IUnifiedError, identifier::Identifier, kind::Kind, packed::PackedError, untyped::UntypedErrorObject
+    error::{IError, IUnifiedError},
+    identifier::Identifier,
+    kind::Kind,
+    packed::PackedError,
+    untyped::UntypedErrorObject,
 };
+use std::error::Error;
+use std::fmt::Debug;
 
 pub type ErrorCode = i32;
 
@@ -12,11 +18,16 @@ pub struct SerializedError {
 }
 
 impl SerializedError {
-    pub fn new_custom(kind: Kind, code: ErrorCode, message: impl Into<String>, unified_error_json: serde_json::Value) -> Self {
+    pub fn new_custom(
+        kind: Kind,
+        code: ErrorCode,
+        message: impl Into<String>,
+        unified_error_json: serde_json::Value,
+    ) -> Self {
         SerializedError {
             code: Identifier::new(kind, code).encode(),
             message: message.into(),
-            data: unified_error_json
+            data: unified_error_json,
         }
     }
 }
@@ -31,7 +42,7 @@ impl std::fmt::Display for SerializedError {
 
 pub fn serialize<U>(error: PackedError<U>) -> Result<SerializedError, serde_json::Error>
 where
-    U: serde::Serialize,
+    U: serde::Serialize + Clone + Debug,
 {
     Ok(SerializedError {
         code: error.identifier.encode(),
@@ -41,7 +52,7 @@ where
 }
 pub fn serialize_ref<U>(error: &PackedError<U>) -> Result<SerializedError, serde_json::Error>
 where
-    U: serde::Serialize,
+    U: serde::Serialize + Clone + Debug,
 {
     Ok(SerializedError {
         code: error.identifier.encode(),
@@ -55,14 +66,37 @@ pub fn unpack_untyped(se: &SerializedError) -> Result<UntypedErrorObject, serde_
     let identifier = Identifier::decode(se.code).unwrap();
     let skip_domain = se.data.as_object().unwrap().values().nth(0).unwrap();
     let skip_subdomain = skip_domain.as_object().unwrap().values().nth(0).unwrap();
-    let (name,value) = skip_subdomain.as_object().unwrap().iter().nth(0).unwrap();
+    let (name, value) = skip_subdomain.as_object().unwrap().iter().nth(0).unwrap();
     let fields: serde_json::Map<String, serde_json::Value> = value.as_object().unwrap().clone();
-    Ok(UntypedErrorObject { identifier, name: name.clone(), fields, raw: se.data.clone() } )
+    Ok(UntypedErrorObject {
+        identifier,
+        name: name.clone(),
+        fields,
+        raw: se.data.clone(),
+    })
 }
 
 pub fn unpack_typed<T>(se: &SerializedError) -> Result<T, serde_json::Error>
 where
-    T: IUnifiedError + serde::Serialize + for<'de> serde::Deserialize<'de>,
+    T: IUnifiedError<T> + serde::Serialize + for<'de> serde::Deserialize<'de> + Clone,
 {
     serde_json::value::from_value(se.data.clone())
+}
+
+impl Error for SerializedError {}
+
+impl IError<UntypedErrorObject> for SerializedError {
+    fn get_identifier(&self) -> Identifier {
+        //FIXME
+        Identifier::decode(self.code).unwrap()
+    }
+
+    fn get_message(&self) -> String {
+        self.message.clone()
+    }
+
+    fn get_data(&self) -> UntypedErrorObject {
+        //FIXME
+        unpack_untyped(self).expect("Internal error")
+    }
 }

@@ -1,22 +1,42 @@
+use std::fmt::Debug;
+
 use crate::{
-    error::{ICustomError, IUnifiedError},
+    error::{ICustomError, IError, IUnifiedError},
     identifier::Identifier,
     serialized::SerializedError,
 };
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct PackedError<U>
 where
-    U: serde::Serialize,
+    U: Clone + Debug,
 {
     pub identifier: Identifier,
     pub message: String,
     pub data: U, // U = specific instance of ZksyncError
 }
 
-pub fn pack_unified<T>(s: T) -> Result<PackedError<T>, serde_json::Error>
+impl<T> IError<T> for PackedError<T>
 where
-    T: serde::Serialize + IUnifiedError + Clone,
+    T: Clone + Debug + serde::Serialize + for<'de> serde::Deserialize<'de>,
+{
+    fn get_identifier(&self) -> Identifier {
+        self.identifier.clone()
+    }
+
+    fn get_message(&self) -> String {
+        self.message.clone()
+    }
+
+    fn get_data(&self) -> T {
+        self.data.clone()
+    }
+}
+
+pub fn pack_unified<T, C>(s: T) -> Result<PackedError<T>, serde_json::Error>
+where
+    T: serde::Serialize + IUnifiedError<C> + Clone + Debug,
+    C: Clone,
 {
     Ok(PackedError {
         identifier: s.get_identifier(),
@@ -25,17 +45,19 @@ where
     })
 }
 
-pub fn pack<T, U>(s: T) -> PackedError<U>
+pub fn pack<T, U, C>(s: T) -> PackedError<U>
 where
-    T: serde::Serialize + ICustomError<U> + Clone,
-    U: IUnifiedError + Clone,
+    T: serde::Serialize + ICustomError<U, C> + Clone,
+    U: IUnifiedError<C> + Clone + Debug,
+    C: Clone,
 {
     pack_unified(s.to_unified()).expect("Serialization error")
 }
 
-pub fn serialized<T>(p: PackedError<T>) -> SerializedError
+pub fn serialized<T, C>(p: PackedError<T>) -> SerializedError
 where
-    T: serde::Serialize + IUnifiedError,
+    T: Clone + Debug + serde::Serialize + IUnifiedError<C>,
+    C: Clone,
 {
     let data = serde_json::value::to_value(&p.data).expect("Serialization error");
     SerializedError {
@@ -44,9 +66,10 @@ where
         data,
     }
 }
-pub fn serialized_ref<T>(p: &PackedError<T>) -> SerializedError
+pub fn serialized_ref<T, C>(p: &PackedError<T>) -> SerializedError
 where
-    T: serde::Serialize + IUnifiedError,
+    T: Clone + Debug + serde::Serialize + IUnifiedError<C>,
+    C: Clone,
 {
     let data = serde_json::value::to_value(&p.data).expect("Serialization error");
     SerializedError {
@@ -58,7 +81,7 @@ where
 
 impl<T> std::fmt::Display for PackedError<T>
 where
-    T: serde::Serialize,
+    T: Clone + Debug + serde::Serialize,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         //FIXME dirty
@@ -72,4 +95,4 @@ where
         ))
     }
 }
-impl<T> std::error::Error for PackedError<T> where T: serde::Serialize + std::fmt::Debug {}
+impl<T> std::error::Error for PackedError<T> where T: serde::Serialize + Debug + Clone {}

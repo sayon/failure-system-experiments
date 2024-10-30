@@ -1,7 +1,7 @@
-use common::error::CustomErrorMessage;
 use common::error::ICustomError;
+
 use common::error::IUnifiedError;
-use common::identifier::Identifier;
+
 use common::kind::CompilerSubdomain;
 
 use common::kind::Kind;
@@ -51,27 +51,8 @@ impl ZksyncError {
         }
     }
 }
+impl IUnifiedError<ZksyncError> for ZksyncError {}
 
-impl IUnifiedError for ZksyncError {
-    fn get_identifier(&self) -> Identifier {
-        Identifier {
-            kind: self.get_kind(),
-            code: self.get_code(),
-        }
-    }
-
-    fn get_message(&self) -> String {
-        match self {
-            ZksyncError::CompilerError(compiler_error) => match compiler_error {
-                CompilerError::Zksolc(zksolc_error) => zksolc_error.get_message(),
-                CompilerError::Solc(solc_error) => solc_error.get_message(),
-            },
-            ZksyncError::ToolingError(tooling_error) => match tooling_error {
-                ToolingError::RustSDK(rust_sdkerror) => rust_sdkerror.get_message(),
-            },
-        }
-    }
-}
 #[derive(Clone, Debug, EnumDiscriminants, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 #[strum_discriminants(name(CompilerSubdomainCode))]
 #[strum_discriminants(vis(pub))]
@@ -87,18 +68,25 @@ pub enum ToolingError {
     RustSDK(RustSDKError),
 }
 
-impl ICustomError<ZksyncError> for ZksolcError {
+impl ICustomError<ZksyncError, ZksyncError> for ZksolcError {
     fn to_unified(&self) -> ZksyncError {
         ZksyncError::CompilerError(CompilerError::Zksolc(self.clone()))
     }
 }
-impl ICustomError<ZksyncError> for SolcError {
+impl ICustomError<ZksyncError, ZksyncError> for SolcError {
     fn to_unified(&self) -> ZksyncError {
         ZksyncError::CompilerError(CompilerError::Solc(self.clone()))
     }
 }
-impl ICustomError<ZksyncError> for RustSDKError {
+impl ICustomError<ZksyncError, ZksyncError> for RustSDKError {
     fn to_unified(&self) -> ZksyncError {
         ZksyncError::ToolingError(ToolingError::RustSDK(self.clone()))
     }
 }
+
+impl std::fmt::Display for ZksyncError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{:#?}", self))
+    }
+}
+impl std::error::Error for ZksyncError {}

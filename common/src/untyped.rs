@@ -1,7 +1,6 @@
 use crate::identifier::Identifier;
 
-
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct UntypedErrorObject {
     pub identifier: Identifier,
     pub name: String,

@@ -1,4 +1,5 @@
 pub mod domains;
+pub mod error;
 mod tests;
 
 use common::error::CustomErrorMessage;
@@ -70,5 +71,4 @@ impl CustomErrorMessage for RustSDKError {
 }
 // -------------------------------------------------------------
 
-pub fn main() {
-}
+pub fn main() {}

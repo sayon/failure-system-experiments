@@ -1,6 +1,6 @@
 use strum_macros::{EnumDiscriminants, FromRepr};
 
-#[derive(Clone, Debug, EnumDiscriminants, Eq, PartialEq)]
+#[derive(Clone, Debug, EnumDiscriminants, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 #[strum_discriminants(name(Domain))]
 #[strum_discriminants(derive(FromRepr))]
 #[strum_discriminants(vis(pub))]
@@ -11,7 +11,7 @@ pub enum Kind {
     Tooling(ToolingSubdomain) = 3,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, FromRepr)]
+#[derive(Clone, Debug, Eq, PartialEq, FromRepr, serde::Serialize, serde::Deserialize)]
 #[repr(i32)]
 pub enum CompilerSubdomain {
     Solc = 1,
@@ -20,13 +20,13 @@ pub enum CompilerSubdomain {
     LLVM = 4,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, FromRepr)]
+#[derive(Clone, Debug, Eq, PartialEq, FromRepr, serde::Serialize, serde::Deserialize)]
 #[repr(i32)]
 pub enum ToolingSubdomain {
     RustSDK = 4,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, FromRepr)]
+#[derive(Clone, Debug, Eq, PartialEq, FromRepr, serde::Serialize, serde::Deserialize)]
 #[repr(i32)]
 pub enum EraSubdomain {
     VM = 1,

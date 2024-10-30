@@ -1,6 +1,6 @@
 use crate::kind::{CompilerSubdomain, Domain, EraSubdomain, Kind, ToolingSubdomain};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Identifier {
     pub kind: Kind,
     pub code: i32,
