@@ -37,12 +37,14 @@ pub enum ZksolcError {
 #[non_exhaustive]
 pub enum SolcError {
     SomeError(String) = 1,
+    OtherSolcError{filename: String, other: String} = 2,
 }
 
 impl CustomErrorMessage for SolcError {
     fn get_message(&self) -> String {
         match self {
             SolcError::SomeError(e) => format!("This is a solc error {}", e),
+            SolcError::OtherSolcError { .. } => String::from("Whatever"),
         }
     }
 }
