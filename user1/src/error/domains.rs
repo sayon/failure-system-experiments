@@ -1,3 +1,7 @@
+//!
+//! Immutable for user
+//!
+//!
 use common::error::ICustomError;
 
 use common::error::IUnifiedError;

@@ -1,12 +1,18 @@
+//!
+//! Immutable for user
+//!
+
+pub mod domains;
+
 use common::error::CustomErrorMessage;
 
 use common::error::IError;
 
 use common::identifier::Identifier;
 
-use crate::domains::CompilerError;
-use crate::domains::ToolingError;
-use crate::domains::ZksyncError;
+use crate::error::domains::CompilerError;
+use crate::error::domains::ToolingError;
+use crate::error::domains::ZksyncError;
 
 impl IError<ZksyncError> for ZksyncError {
     fn get_identifier(&self) -> Identifier {

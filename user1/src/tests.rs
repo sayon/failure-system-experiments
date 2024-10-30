@@ -8,7 +8,7 @@ use common::{
 };
 
 use crate::{
-    domains::{CompilerError, ZksyncError},
+    error::domains::{CompilerError, ZksyncError},
     ZksolcError,
 };
 
