@@ -84,14 +84,13 @@ where
     T: Clone + Debug + serde::Serialize,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        //FIXME dirty
         let value = serde_json::value::to_value(&self.data).expect("Serialization error");
         let value_pretty = serde_json::to_string(&value).expect("Serialization error");
+        let code = self.identifier.encode();
+        let message = &self.message;
+        let data = value_pretty;
         f.write_fmt(format_args!(
-            "{{ code: {} ; message: \"{}\"; data: {} }}",
-            self.identifier.encode(),
-            self.message,
-            value_pretty
+            r#"{{ code: {code} ; message: "{message}"; data: {data} }}"#,
         ))
     }
 }

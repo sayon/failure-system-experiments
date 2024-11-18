@@ -1,16 +1,17 @@
 #![cfg(test)]
 #![allow(dead_code)]
 
-use zksync_error::{
-    kind::{EraSubdomain, Kind},
-    packed::{pack, serialized, PackedError},
-    serialized::{unpack_typed, unpack_untyped, SerializedError},
-};
 
-use crate::{
-    error::domains::{CompilerError, ZksyncError},
-    ZksolcError,
-};
+use zksync_error::serialized::SerializedError;
+use zksync_error::serialized::unpack_untyped;
+use zksync_error::serialized::unpack_typed;
+use zksync_error::packed::PackedError;
+use zksync_error::packed::serialized;
+use zksync_error::packed::pack;
+use zksync_error::kind::Kind;
+use zksync_error::error::domains::CompilerError;
+use zksync_error::error::domains::ZksyncError;
+use zksync_error::error::definitions::ZksolcError;
 
 pub fn thrower_known() -> Result<(), PackedError<ZksyncError>> {
     Err(pack(ZksolcError::Generic {
@@ -103,11 +104,11 @@ pub fn handle_known_serialized(received_error: &SerializedError) {
 
 pub fn thrower_unknown() -> Result<(), SerializedError> {
     Err(SerializedError::new_custom(
-        Kind::Era(EraSubdomain::VM),
+        Kind::ToolingError(zksync_error::error::domains::ToolingComponentCode::RustSDK),
         242,
         "Message does not matter -- except for a possible prefix.",
         serde_json::json!(
-            { "EraError" : { "VM" : { "SomeVMError" : { "somefield" : "somevalue", "intfield": 42 } } } }
+            { "Tooling" : { "RustSDK" : { "WrongTool" : { "info" : "somevalue" } } } }
         ),
     ))
 }
@@ -122,38 +123,12 @@ pub fn handle_unknown_serialized() {
 
         assert_eq!(
             format!("{:#?}", error_object),
-            r#"UntypedErrorObject {
-    identifier: Identifier {
-        kind: Era(
-            VM,
-        ),
-        code: 242,
-    },
-    name: "SomeVMError",
-    fields: {
-        "intfield": Number(42),
-        "somefield": String("somevalue"),
-    },
-    raw: Object {
-        "EraError": Object {
-            "VM": Object {
-                "SomeVMError": Object {
-                    "intfield": Number(42),
-                    "somefield": String("somevalue"),
-                },
-            },
-        },
-    },
-}"#
+            "UntypedErrorObject {\n    identifier: Identifier {\n        kind: Tooling(\n            RustSDK,\n        ),\n        code: 242,\n    },\n    name: \"WrongTool\",\n    fields: {\n        \"info\": String(\"somevalue\"),\n    },\n    raw: Object {\n        \"Tooling\": Object {\n            \"RustSDK\": Object {\n                \"WrongTool\": Object {\n                    \"info\": String(\"somevalue\"),\n                },\n            },\n        },\n    },\n}"
         );
 
         assert_eq!(
-            error_object.fields.get("somefield"),
+            error_object.fields.get("info"),
             Some(&serde_json::json!("somevalue"))
-        );
-        assert_eq!(
-            error_object.fields.get("intfield"),
-            Some(&serde_json::json!(42))
         );
     }
 }

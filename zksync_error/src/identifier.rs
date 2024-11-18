@@ -1,4 +1,7 @@
-use crate::kind::{CompilerSubdomain, Domain, EraSubdomain, Kind, ToolingSubdomain};
+use crate::error::domains::CompilerComponentCode;
+use crate::error::domains::ToolingComponentCode;
+use crate::kind::DomainCode;
+use crate::kind::Kind;
 
 #[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct Identifier {
@@ -13,19 +16,22 @@ impl Identifier {
 
     pub fn encode(&self) -> i32 {
         let domain_code: i32 = self.kind.domain_code();
-        let subdomain_code: i32 = self.kind.subdomain_code();
-        domain_code * 10000 + subdomain_code * 1000 + self.code
+        let component_code: i32 = self.kind.component_code();
+        domain_code * 10000 + component_code * 1000 + self.code
     }
 
     pub fn decode(raw_code: i32) -> Option<Self> {
         let code = raw_code % 1000;
-        let subdomain_code = (raw_code / 1000) % 10;
-        let domain = Domain::from_repr((raw_code / 10000) % 10)?;
-        let path: Kind = match domain {
-            Domain::Era => Kind::Era(EraSubdomain::from_repr(subdomain_code)?),
-            Domain::Compiler => Kind::Compiler(CompilerSubdomain::from_repr(subdomain_code)?),
-            Domain::Tooling => Kind::Tooling(ToolingSubdomain::from_repr(subdomain_code)?),
+        let component_code = (raw_code / 1000) % 10;
+        let domain = DomainCode::from_repr((raw_code / 10000) % 10)?;
+        let kind: Kind = match domain {
+            DomainCode::CompilerError => {
+                Kind::CompilerError(CompilerComponentCode::from_repr(component_code)?)
+            }
+            DomainCode::ToolingError => {
+                Kind::ToolingError(ToolingComponentCode::from_repr(component_code)?)
+            }
         };
-        Some(Identifier { kind: path, code })
+        Some(Identifier { kind, code })
     }
 }

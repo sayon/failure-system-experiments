@@ -1,18 +1,40 @@
-//!
-//! Immutable for user
-//!
-
+pub mod definitions;
 pub mod domains;
 
-use zksync_error::error::CustomErrorMessage;
-
-use zksync_error::error::IError;
-
-use zksync_error::identifier::Identifier;
+use std::error::Error;
 
 use crate::error::domains::CompilerError;
 use crate::error::domains::ToolingError;
 use crate::error::domains::ZksyncError;
+use crate::identifier::Identifier;
+
+pub trait IError<ContainedType>: Error
+where
+    ContainedType: Clone,
+{
+    fn get_identifier(&self) -> Identifier;
+    fn get_message(&self) -> String;
+    fn get_data(&self) -> ContainedType;
+}
+
+pub trait IUnifiedError<ContainedType>:
+    serde::Serialize + for<'de> serde::Deserialize<'de> + IError<ContainedType>
+where
+    ContainedType: Clone,
+{
+}
+
+pub trait ICustomError<U, C>
+where
+    U: IUnifiedError<C>,
+    C: Clone,
+{
+    fn to_unified(&self) -> U;
+}
+
+pub trait CustomErrorMessage {
+    fn get_message(&self) -> String;
+}
 
 impl IError<ZksyncError> for ZksyncError {
     fn get_identifier(&self) -> Identifier {
