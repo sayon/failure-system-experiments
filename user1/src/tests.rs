@@ -1,30 +1,26 @@
 #![cfg(test)]
 #![allow(dead_code)]
 
-
-use zksync_error::serialized::SerializedError;
-use zksync_error::serialized::unpack_untyped;
-use zksync_error::serialized::unpack_typed;
-use zksync_error::packed::PackedError;
-use zksync_error::packed::serialized;
-use zksync_error::packed::pack;
-use zksync_error::kind::Kind;
+use zksync_error::error::definitions::Zksolc;
 use zksync_error::error::domains::Compiler;
 use zksync_error::error::domains::ZksyncError;
-use zksync_error::error::definitions::Zksolc;
+use zksync_error::kind::Kind;
+use zksync_error::packed::pack;
+use zksync_error::packed::serialized;
+use zksync_error::packed::PackedError;
+use zksync_error::serialized::unpack_typed;
+use zksync_error::serialized::unpack_untyped;
+use zksync_error::serialized::SerializedError;
 
 pub fn thrower_known() -> Result<(), PackedError<ZksyncError>> {
-    Err(pack(Zksolc::Generic {
-        filename: "some_filename".to_string(),
-        line: 10,
-        column: 42,
+    Err(pack(Zksolc::Umbrella {
+        inner: serde_json::json! { "null" },
     }))
 }
 pub fn thrower_known_serialized() -> Result<(), SerializedError> {
-    Err(serialized(pack(Zksolc::Generic {
-        filename: "some_filename".to_string(),
-        line: 10,
-        column: 42,
+    Err(serialized(pack(Zksolc::FileNotFound {
+        path: "e".into(),
+        file_index: 1,
     })))
 }
 
@@ -35,47 +31,37 @@ pub fn handle_known() {
     match typed_error {
         ZksyncError::Compiler(compiler_error) => match &compiler_error {
             Compiler::Zksolc(zksolc_error) => match &zksolc_error {
-                Zksolc::Generic { .. } => {
+                Zksolc::Umbrella { inner } => {
                     assert_eq!(
                         format!("{:#?}", &typed_error),
-                        r#"Compiler(
-    Zksolc(
-        Generic {
-            filename: "some_filename",
-            line: 10,
-            column: 42,
-        },
-    ),
-)"#
-                    );
+  "Compiler(\n    Zksolc(\n        Umbrella {\n            inner: String(\"null\"),\n        },\n    ),\n)");
 
                     assert_eq!(
                         format!("{:#?}", &received_error),
-                        r#"PackedError {
+                        "PackedError {
     identifier: Identifier {
         kind: Compiler(
             Zksolc,
         ),
         code: 42,
     },
-    message: "Some error in zksolc when processing  some_filename line 10 col 42",
+    message: \"Any error!\",
     data: Compiler(
         Zksolc(
-            Generic {
-                filename: "some_filename",
-                line: 10,
-                column: 42,
+            Umbrella {
+                inner: String(\"null\"),
             },
         ),
     ),
-}"#
+}"
                     );
                 }
+                Zksolc::FileNotFound { .. } => todo!(),
+                Zksolc::SolcNotFound { path, payload } => todo!(),
                 _ => todo!(),
             },
-            Compiler::Solc(_) => todo!(),
         },
-        ZksyncError::Tooling(_) => todo!(),
+        ZksyncError::Core(_) => todo!(),
     }
 }
 
@@ -84,7 +70,7 @@ pub fn handle_known_serialized(received_error: &SerializedError) {
         match &typed_error {
             ZksyncError::Compiler(compiler_error) => match compiler_error {
                 Compiler::Zksolc(zksolc_error) => match zksolc_error {
-                    Zksolc::Generic { .. } => {
+                    Zksolc::FileNotFound { .. } => {
                         println!("Caught known error: {:#?}", &typed_error);
                         println!(
                             "Don't have to use json to work with this error: {:} ",
@@ -93,9 +79,8 @@ pub fn handle_known_serialized(received_error: &SerializedError) {
                     }
                     _ => todo!(),
                 },
-                Compiler::Solc(_) => todo!(),
             },
-            ZksyncError::Tooling(_) => todo!(),
+            ZksyncError::Core(_) => todo!(),
         }
     } else {
         println!("Use json to work with this error: {:} ", &received_error);
@@ -104,7 +89,7 @@ pub fn handle_known_serialized(received_error: &SerializedError) {
 
 pub fn thrower_unknown() -> Result<(), SerializedError> {
     Err(SerializedError::new_custom(
-        Kind::Tooling(zksync_error::error::domains::ToolingCode::RustSDK),
+        Kind::Compiler(zksync_error::error::domains::CompilerCode::Zksolc),
         242,
         "Message does not matter -- except for a possible prefix.",
         serde_json::json!(
