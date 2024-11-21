@@ -1,7 +1,7 @@
 use strum_macros::{EnumDiscriminants, FromRepr};
 
-use crate::error::domains::CompilerComponentCode;
-use crate::error::domains::ToolingComponentCode;
+use crate::error::domains::CompilerCode;
+use crate::error::domains::ToolingCode;
 
 #[derive(Clone, Debug, EnumDiscriminants, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 #[strum_discriminants(name(DomainCode))]
@@ -9,8 +9,8 @@ use crate::error::domains::ToolingComponentCode;
 #[strum_discriminants(vis(pub))]
 #[repr(i32)]
 pub enum Kind {
-    CompilerError(CompilerComponentCode) = 2,
-    ToolingError(ToolingComponentCode) = 3,
+    Compiler(CompilerCode) = 2,
+    Tooling(ToolingCode) = 3,
 }
 
 impl Kind {
@@ -20,8 +20,8 @@ impl Kind {
     }
     pub fn component_code(&self) -> i32 {
         match self {
-            Kind::CompilerError(component) => component.clone() as i32,
-            Kind::ToolingError(component) => component.clone() as i32,
+            Kind::Compiler(component) => component.clone() as i32,
+            Kind::Tooling(component) => component.clone() as i32,
         }
     }
 }

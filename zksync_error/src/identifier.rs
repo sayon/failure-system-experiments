@@ -1,5 +1,5 @@
-use crate::error::domains::CompilerComponentCode;
-use crate::error::domains::ToolingComponentCode;
+use crate::error::domains::CompilerCode;
+use crate::error::domains::ToolingCode;
 use crate::kind::DomainCode;
 use crate::kind::Kind;
 
@@ -25,11 +25,11 @@ impl Identifier {
         let component_code = (raw_code / 1000) % 10;
         let domain = DomainCode::from_repr((raw_code / 10000) % 10)?;
         let kind: Kind = match domain {
-            DomainCode::CompilerError => {
-                Kind::CompilerError(CompilerComponentCode::from_repr(component_code)?)
+            DomainCode::Compiler => {
+                Kind::Compiler(CompilerCode::from_repr(component_code)?)
             }
-            DomainCode::ToolingError => {
-                Kind::ToolingError(ToolingComponentCode::from_repr(component_code)?)
+            DomainCode::Tooling => {
+                Kind::Tooling(ToolingCode::from_repr(component_code)?)
             }
         };
         Some(Identifier { kind, code })

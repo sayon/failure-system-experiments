@@ -3,8 +3,8 @@ pub mod domains;
 
 use std::error::Error;
 
-use crate::error::domains::CompilerError;
-use crate::error::domains::ToolingError;
+use crate::error::domains::Compiler;
+use crate::error::domains::Tooling;
 use crate::error::domains::ZksyncError;
 use crate::identifier::Identifier;
 
@@ -46,13 +46,9 @@ impl IError<ZksyncError> for ZksyncError {
 
     fn get_message(&self) -> String {
         match self {
-            ZksyncError::CompilerError(compiler_error) => match compiler_error {
-                CompilerError::Zksolc(zksolc_error) => zksolc_error.get_message(),
-                CompilerError::Solc(solc_error) => solc_error.get_message(),
-            },
-            ZksyncError::ToolingError(tooling_error) => match tooling_error {
-                ToolingError::RustSDK(rust_sdkerror) => rust_sdkerror.get_message(),
-            },
+            ZksyncError::Compiler(Compiler::Zksolc(error)) => error.get_message(),
+            ZksyncError::Compiler(Compiler::Solc(error)) => error.get_message(),
+            ZksyncError::Tooling(Tooling::RustSDK(error)) => error.get_message(),
         }
     }
 

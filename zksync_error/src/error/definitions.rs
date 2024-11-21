@@ -7,10 +7,10 @@ use strum_macros::EnumDiscriminants;
 
 #[repr(i32)]
 #[derive(Clone, Debug, Eq, EnumDiscriminants, PartialEq, serde::Serialize, serde::Deserialize)]
-#[strum_discriminants(name(RustSDKErrorCode))]
+#[strum_discriminants(name(RustSDKCode))]
 #[strum_discriminants(vis(pub))]
 #[non_exhaustive]
-pub enum RustSDKError {
+pub enum RustSDK {
     WrongTool { info: String } = 1,
 }
 
@@ -18,9 +18,9 @@ pub enum RustSDKError {
 // non_exhaustive should be removed when the API stabilizes and the migration to the new system is complete.
 #[repr(i32)]
 #[derive(Clone, Debug, Eq, EnumDiscriminants, PartialEq, serde::Serialize, serde::Deserialize)]
-#[strum_discriminants(name(ZksolcErrorCode))]
+#[strum_discriminants(name(ZksolcCode))]
 #[strum_discriminants(vis(pub))]
-pub enum ZksolcError {
+pub enum Zksolc {
     Generic {
         filename: String,
         line: i32,
@@ -30,27 +30,27 @@ pub enum ZksolcError {
 
 #[repr(i32)]
 #[derive(Clone, Debug, Eq, EnumDiscriminants, PartialEq, serde::Serialize, serde::Deserialize)]
-#[strum_discriminants(name(SolcErrorCode))]
+#[strum_discriminants(name(SolcCode))]
 #[strum_discriminants(vis(pub))]
 #[non_exhaustive]
-pub enum SolcError {
+pub enum Solc {
     SomeError(String) = 1,
     OtherSolcError { filename: String, other: String } = 2,
 }
 
-impl CustomErrorMessage for SolcError {
+impl CustomErrorMessage for Solc {
     fn get_message(&self) -> String {
         match self {
-            SolcError::SomeError(e) => format!("This is a solc error {}", e),
-            SolcError::OtherSolcError { .. } => String::from("Whatever"),
+            Solc::SomeError(e) => format!("This is a solc error {e}"),
+            Solc::OtherSolcError { .. } => String::from("Whatever"),
         }
     }
 }
 
-impl CustomErrorMessage for ZksolcError {
+impl CustomErrorMessage for Zksolc {
     fn get_message(&self) -> String {
         match self {
-            ZksolcError::Generic {
+            Zksolc::Generic {
                 filename,
                 line,
                 column,
@@ -62,10 +62,10 @@ impl CustomErrorMessage for ZksolcError {
     }
 }
 
-impl CustomErrorMessage for RustSDKError {
+impl CustomErrorMessage for RustSDK {
     fn get_message(&self) -> String {
         match self {
-            RustSDKError::WrongTool { info } => format!("Wrong tool or smth: {}", info),
+            RustSDK::WrongTool { info } => format!("Wrong tool or smth: {}", info),
         }
     }
 }
